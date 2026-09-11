@@ -1,0 +1,14 @@
+# data, results, and derived artifacts never leave the analysis environment
+data_cache
+data_cache/
+results/
+INTERNAL_*.md
+__pycache__/
+.pytest_cache/
+*.parquet
+*.npy
+*.log
+*_log.txt
+.DS_Store
+backups/
+catboost_info/
