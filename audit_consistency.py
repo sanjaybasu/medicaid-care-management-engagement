@@ -56,6 +56,27 @@ facts = {
  "sensitivity excluding day 0 AUROC": f3(SE["excluding_enrollment_day_contact"]["auroc"]),
  "sensitivity base AUROC": f3(SE["base_lightgbm"]["auroc"]),
 }
+MAT, THR, ADV = C["matching"], C["thresholds"], C["actions_advanced"]
+facts.update({
+ "youden sensitivity": f3(D["youden"]["sensitivity"]), "youden specificity": f3(D["youden"]["specificity"]),
+ "youden flag %": f"{100*D['youden']['flag_rate']:.1f}", "youden NNF": f"{D['youden']['number_needed_to_flag']:.2f}",
+ "top20 sensitivity": f3(D["top20"]["sensitivity"]), "top20 specificity": f3(D["top20"]["specificity"]),
+ "top20 NNF": f"{D['top20']['number_needed_to_flag']:.2f}", "top30 sensitivity": f3(D["top30"]["sensitivity"]),
+ "matched pairs": n(D["match_pairs"]), "matched max SMD": f"{D['match_smd']:.3f}",
+ "matched ED ratio": f3(D["match_ed"]["ratio"]), "matched IP ratio": f3(D["match_ip"]["ratio"]),
+ "matched cost ratio": f3(D["match_cost"]["ratio"]),
+ "matched negative control ED": f3(D["match_negctrl_ed"]["ratio"]), "matched negative control cost": f3(D["match_negctrl_cost"]["ratio"]),
+ "unadjusted cost ratio": f3(MAT["unadjusted"]["estimates"]["total_paid_91_270"]["ratio"]),
+ "unadjusted negative control cost": f3(D["unadj_negctrl_cost"]["ratio"]),
+ "overlap ED ratio": f3(D["ow_ed"]["ratio"]), "overlap cost ratio": f3(D["ow_cost"]["ratio"]), "overlap max SMD": f"{D['ow_smd']:.3f}",
+ "active comparator in-person vs phone": f"{ADV['AC1_inperson_vs_phone_chw_14d__all_risk']['overlap_weighted']['rd']:+.3f}",
+ "active comparator therapy vs pharmacy": f"{ADV['AC2_therapy_vs_pharmacy_30d__all_risk']['overlap_weighted']['rd']:+.3f}",
+ "active comparator call vs text": f"{ADV['AC3_call_vs_text_attempt_during_lapse__all_risk']['overlap_weighted']['rd']:+.3f}",
+ "overlap therapy RD": f"{ADV['A3_therapy_30d__all_risk']['overlap_weighted']['rd']:+.3f}",
+ "overlap pharmacist RD": f"{ADV['A4_pharmacist_30d__all_risk']['overlap_weighted']['rd']:+.3f}",
+ "overlap CHW RD": f"{ADV['A2_inperson_chw_14d__all_risk']['overlap_weighted']['rd']:+.3f}",
+ "overlap attempt RD": f"{ADV['A1_attempt_during_7day_lapse__all_risk']['overlap_weighted']['rd']:+.3f}",
+})
 for k in ["A1_attempt_during_7day_lapse__all_risk", "A2_inperson_chw_14d__all_risk", "A3_therapy_30d__all_risk",
           "A4_pharmacist_30d__all_risk", "A5_morning_weekday_call_14d__all_risk"]:
     v = AC["actions"][k]

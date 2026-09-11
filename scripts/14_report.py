@@ -16,7 +16,8 @@ J = lambda n: json.load(open(R/n))
 flow, outc, mB, mA, conc, act, land, sens, phys = (J("flow_v4.json"), J("outcomes_v4.json"), J("metrics_B_full.json"),
     J("metrics_A_full.json"), J("concordance_v4.json"), J("actions_v4.json"), J("landmarks_v4.json"), J("sensitivity_v4.json"), J("physician_sample_v4.json"))
 mod = J("models_B_full.json")
-C = {"flow": flow, "outcomes": outc, "metrics_taskB": mB, "metrics_taskA": mA, "concordance": conc,
+MAT, THR, ADV = J("matching_v4.json"), J("thresholds_v4.json"), J("actions_advanced_v4.json")
+C = {"matching": MAT, "thresholds": THR, "actions_advanced": ADV, "flow": flow, "outcomes": outc, "metrics_taskB": mB, "metrics_taskA": mA, "concordance": conc,
      "actions": act, "landmarks": land, "sensitivity": sens, "physician_sample": phys, "models": mod,
      "text": J("text_v4.json"), "pull": J("pull_manifest_v4.json")}
 
@@ -103,27 +104,55 @@ for r in conc["observed_disengagement_associations"]:
                  "Value": f"{r['ratio']:.3f} ({r['ci_95'][0]:.3f} to {r['ci_95'][1]:.3f})"})
 T5 = pd.DataFrame(rows); C["table5"] = T5.to_dict("records")
 
-# ---------------- Table 6: Aim 3 --------------------------------------------------------------------
-ALAB = {"A1_attempt_during_7day_lapse": "Logged outreach attempt during a 7-day lapse",
-        "A2_inperson_chw_14d": "In-person visit by a community health worker within 14 days",
-        "A3_therapy_30d": "First contact with a therapist within 30 days",
-        "A4_pharmacist_30d": "First contact with a clinical pharmacist within 30 days",
-        "A5_morning_weekday_call_14d": "Morning weekday telephone attempt within 14 days"}
+SPECL = {"unadjusted": "Unadjusted", "propensity_matched": "Exact match on acute care risk decile plus propensity match",
+         "coarsened_exact_matching": "Coarsened exact matching", "overlap_weights": "Overlap weights"}
+YL = {"ed_91_270": "Emergency department visits, days 91 to 270", "ip_91_270": "Inpatient admissions, days 91 to 270",
+      "total_paid_91_270": "Total paid, days 91 to 270", "ed_pre365": "Negative control: emergency department visits in the prior year",
+      "total_paid_pre180": "Negative control: total paid in the 180 days before enrolment",
+      "negctrl_paid_1_180": "Negative control: dialysis spending"}
 rows = []
-for key, v in act["actions"].items():
-    base, pop = key.split("__")
-    lab = ALAB[base] + (" (high predicted risk)" if pop == "high_risk" else " (all contacts)")
-    if "msm" not in v:
-        rows.append({"Action": lab, "Contacts": f"{v.get('n', 0):,}", "Exposed": f"{v.get('treated', 0):,}",
-                     "Risk difference (marginal structural model)": "not estimable", "Risk difference (AIPW)": "not estimable",
-                     "Within-patient odds ratio": "not estimable", "Falsification gates": v.get("note", "")}); continue
-    wp = v["within_patient"]
-    rows.append({"Action": lab, "Contacts": f"{v['n']:,}", "Exposed": f"{v['treated']:,}",
-                 "Risk difference (marginal structural model)": f"{v['msm']['rd']:+.3f}",
-                 "Risk difference (AIPW)": f"{v['aipw']['rd']:+.3f} ({v['aipw']['ci_95'][0]:+.3f} to {v['aipw']['ci_95'][1]:+.3f})",
-                 "Within-patient odds ratio": (f"{wp['or']:.2f} ({wp['ci_95'][0]:.2f} to {wp['ci_95'][1]:.2f})" if "or" in wp else f"not estimable ({wp['n_discordant_patients']} discordant patients)"),
-                 "Falsification gates": ("all passed" if v["gates"]["all_pass"] else
-                                         "failed: " + ", ".join([g for g, ok in [("pre-trend", v["gates"]["G1_pass"]), ("balance", v["gates"]["G2_pass"]), ("negative control", v["gates"]["G3_pass"])] if not ok]))})
+for spec, lab in SPECL.items():
+    v = MAT[spec]
+    for y, yl in YL.items():
+        e = v["estimates"].get(y)
+        if not e or "ratio" not in e: continue
+        rows.append({"Specification": lab, "Maximum absolute standardized difference": f"{v['balance']['max_abs_smd']:.3f}",
+                     "Outcome": yl, "Ratio (95% CI)": f"{e['ratio']:.3f} ({e['ci_95'][0]:.3f} to {e['ci_95'][1]:.3f})",
+                     "Disengaged": e["mean_exposed"], "Engaged": e["mean_unexposed"]})
+T5b = pd.DataFrame(rows); C["table5b"] = T5b.to_dict("records")
+
+rows = [{"Operating point": r["operating_point"], "Threshold": f"{r['threshold']:.3f}", "Contacts flagged": f"{100*r['flag_rate']:.1f}%",
+         "Sensitivity": f"{r['sensitivity']:.3f}", "Specificity": f"{r['specificity']:.3f}", "PPV": f"{r['ppv']:.3f}",
+         "NPV": f"{r['npv']:.3f}", "Youden J": f"{r['youden_j']:.3f}", "Number needed to flag": f"{r['number_needed_to_flag']:.2f}",
+         "Contacts flagged per week": f"{r['flagged_per_week']:.1f}"} for r in THR["B"]["operating_points"]]
+T7 = pd.DataFrame(rows); C["table7"] = T7.to_dict("records")
+
+# ---------------- Table 6: Aim 3 --------------------------------------------------------------------
+ALAB = {"A1_attempt_during_7day_lapse": "Logged outreach attempt during a 7-day lapse, versus none",
+        "A2_inperson_chw_14d": "In-person visit by a community health worker within 14 days, versus none",
+        "A3_therapy_30d": "First contact with a therapist within 30 days, versus none",
+        "A4_pharmacist_30d": "First contact with a clinical pharmacist within 30 days, versus none",
+        "A5_morning_weekday_call_14d": "Morning weekday telephone attempt within 14 days, versus none",
+        "AC1_inperson_vs_phone_chw_14d": "Active comparator: in-person versus telephone contact by a community health worker",
+        "AC2_therapy_vs_pharmacy_30d": "Active comparator: first therapist versus first clinical pharmacist contact",
+        "AC3_call_vs_text_attempt_during_lapse": "Active comparator: telephone versus text attempt during a lapse"}
+rows = []
+for key, v in ADV.items():
+    if key == "note": continue
+    base, pop = key.rsplit("__", 1)
+    lab = ALAB.get(base, base) + (" [high predicted risk]" if pop == "high_risk" else " [all contacts]")
+    if "overlap_weighted" not in v:
+        rows.append({"Contrast": lab, "Contacts": f"{v.get('n', 0):,}", "Exposed": f"{v.get('treated', 0) or 0:,}",
+                     "Overlap-weighted risk difference (95% CI)": "not estimable", "Maximum absolute standardized difference": "",
+                     "TMLE": "", "Causal forest": "", "Calibrated against negative controls": v.get("note", "")}); continue
+    ow, tm, cf = v["overlap_weighted"], v["tmle"], v.get("causal_forest", {})
+    ec = v.get("empirical_calibration")
+    rows.append({"Contrast": lab, "Contacts": f"{v['n']:,}", "Exposed": f"{v['treated']:,}",
+                 "Overlap-weighted risk difference (95% CI)": f"{ow['rd']:+.3f} ({ow['ci_95'][0]:+.3f} to {ow['ci_95'][1]:+.3f})",
+                 "Maximum absolute standardized difference": f"{ow['max_abs_smd_weighted']:.3f}",
+                 "TMLE": f"{tm['rd']:+.3f} ({tm['ci_95'][0]:+.3f} to {tm['ci_95'][1]:+.3f})",
+                 "Causal forest": (f"{cf['ate']:+.3f} ({cf['ci_95'][0]:+.3f} to {cf['ci_95'][1]:+.3f})" if "ate" in cf else "not estimable"),
+                 "Calibrated against negative controls": (f"{ec['calibrated_rd']:+.3f} ({ec['calibrated_ci_95'][0]:+.3f} to {ec['calibrated_ci_95'][1]:+.3f})" if ec else "")})
 T6 = pd.DataFrame(rows); C["table6"] = T6.to_dict("records")
 
 # ---------------- derived numbers for the text -------------------------------------------------------
@@ -160,12 +189,27 @@ C["derived"] = {
  "equalized_odds_race": mB["fairness"]["race"]["equalized_odds_ratio"],
  "equalized_odds_state": mB["fairness"]["state"]["equalized_odds_ratio"],
  "n_actions_passing_gates": int(sum(1 for v in act["actions"].values() if v.get("gates", {}).get("all_pass"))),
+ "youden": {k: THR["B"]["operating_points"][-4][k] for k in ["threshold", "flag_rate", "sensitivity", "specificity", "ppv", "youden_j", "number_needed_to_flag", "flagged_per_week"]},
+ "top20": {k: THR["B"]["operating_points"][2][k] for k in ["flag_rate", "sensitivity", "specificity", "ppv", "number_needed_to_flag", "flagged_per_week"]},
+ "top30": {k: THR["B"]["operating_points"][3][k] for k in ["flag_rate", "sensitivity", "specificity", "ppv"]},
+ "match_ed": MAT["propensity_matched"]["estimates"]["ed_91_270"], "match_ip": MAT["propensity_matched"]["estimates"]["ip_91_270"],
+ "match_cost": MAT["propensity_matched"]["estimates"]["total_paid_91_270"],
+ "match_negctrl_ed": MAT["propensity_matched"]["estimates"]["ed_pre365"],
+ "match_negctrl_cost": MAT["propensity_matched"]["estimates"]["total_paid_pre180"],
+ "match_pairs": MAT["propensity_matched"]["pairs"], "match_smd": MAT["propensity_matched"]["balance"]["max_abs_smd"],
+ "unadj_cost": MAT["unadjusted"]["estimates"]["total_paid_91_270"], "unadj_negctrl_cost": MAT["unadjusted"]["estimates"]["total_paid_pre180"],
+ "ow_ed": MAT["overlap_weights"]["estimates"]["ed_91_270"], "ow_cost": MAT["overlap_weights"]["estimates"]["total_paid_91_270"],
+ "ow_smd": MAT["overlap_weights"]["balance"]["max_abs_smd"],
+ "within_decile_ed_ratios": [v["ed_ratio"] for v in MAT["within_risk_decile"].values()],
+ "within_decile_cost_ratios": [v["cost_ratio"] for v in MAT["within_risk_decile"].values()],
+ "adv": {k: ADV[k] for k in ADV if k != "note"},
 }
 json.dump(C, open(R/"canonical.json", "w"), indent=1, default=str)
 
 # ---------------- tables to markdown ------------------------------------------------------------------
 def md(df, idx=False): return df.to_markdown(index=idx)
-tb = {"Table 1": T1.reset_index(), "Table 2": T2, "Table 3": T3, "Table 4": T4, "Table 5": T5, "Table 6": T6}
+tb = {"Table 1": T1.reset_index(), "Table 2": T2, "Table 3": T3, "Table 4": T4, "Table 5": T5,
+      "Table 5b": T5b, "Table 6": T6, "Table 7": T7}
 (NB/"tables_v4.md").write_text("\n\n".join(f"**{k}**\n\n{md(v)}" for k, v in tb.items()))
 
 # ---------------- figures -------------------------------------------------------------------------------

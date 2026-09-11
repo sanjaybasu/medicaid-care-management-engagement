@@ -16,5 +16,8 @@ $PY scripts/09_actions.py
 $PY scripts/10_physician_sample.py
 $PY scripts/12_landmarks.py
 $PY scripts/13_sensitivity.py
+$PY scripts/15_matching.py
+$PY scripts/16_actions_advanced.py
+$PY scripts/17_thresholds.py
 $PY scripts/14_report.py
 $PY audit_consistency.py
