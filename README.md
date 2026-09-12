@@ -27,3 +27,7 @@ The locked analysis plan is `PREREGISTRATION_v4_engagement.md`. Every number in 
 | `audit_consistency.py` | Verifies the manuscript against the canonical file |
 
 Run order: 00, 00b, 01, 02, 03, 04, 05 (B then A), 06 (B then A), 08, 09, 10, 12, 13, 15, 16, 17, 14, audit.
+
+## License
+
+MIT. See `LICENSE`. The code is released without data: no patient data, no intermediate results, and no manuscript files are contained in this repository.
