@@ -2,7 +2,7 @@
 import json, pathlib, re, sys
 P = pathlib.Path(__file__).resolve().parent
 C = json.load(open(P/"results"/"canonical.json"))
-MS = (P.parent.parent/"notebooks"/"care-management-engagement"/"manuscript_engagement_prediction_DigitalHealth.md").read_text()
+MS = (P.parent.parent/"notebooks"/"care-management-engagement"/"manuscript_engagement_prediction_AJMC.md").read_text()
 TB = (P.parent.parent/"notebooks"/"care-management-engagement"/"tables_v4.md").read_text()
 APP = (P.parent.parent/"notebooks"/"care-management-engagement"/"supplementary_appendix_v4.md").read_text()
 TEXT = MS + "\n" + TB + "\n" + APP

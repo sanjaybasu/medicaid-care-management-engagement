@@ -17,8 +17,8 @@ flow, outc, mB, mA, conc, act, land, sens, phys = (J("flow_v4.json"), J("outcome
     J("metrics_A_full.json"), J("concordance_v4.json"), J("actions_v4.json"), J("landmarks_v4.json"), J("sensitivity_v4.json"), J("physician_sample_v4.json"))
 mod = J("models_B_full.json")
 MAT, THR, ADV = J("matching_v4.json"), J("thresholds_v4.json"), J("actions_advanced_v4.json")
-NEEDS, NM, RC = J("needs_v4.json"), J("needs_matched_v4.json"), J("reviewer_checks_v4.json")
-C = {"matching": MAT, "thresholds": THR, "actions_advanced": ADV, "needs": NEEDS, "needs_matched": NM, "reviewer_checks": RC, "flow": flow, "outcomes": outc, "metrics_taskB": mB, "metrics_taskA": mA, "concordance": conc,
+NEEDS, NM, RC, RG = J("needs_v4.json"), J("needs_matched_v4.json"), J("reviewer_checks_v4.json"), J("reporting_gaps_v4.json")
+C = {"matching": MAT, "thresholds": THR, "actions_advanced": ADV, "needs": NEEDS, "needs_matched": NM, "reviewer_checks": RC, "reporting_gaps": RG, "flow": flow, "outcomes": outc, "metrics_taskB": mB, "metrics_taskA": mA, "concordance": conc,
      "actions": act, "landmarks": land, "sensitivity": sens, "physician_sample": phys, "models": mod,
      "text": J("text_v4.json"), "pull": J("pull_manifest_v4.json")}
 
@@ -252,11 +252,43 @@ C["derived"] = {
  "risk_auroc_by_state": {k: v["auroc_risk_score"] for k, v in RC["discrimination_by_state"].items()},
  "ac1_mde": RC["active_comparator_power"]["AC1_inperson_vs_phone_chw_14d__all_risk"]["mde_risk_difference_80pct_power"],
  "ac2_mde": RC["active_comparator_power"]["AC2_therapy_vs_pharmacy_30d__all_risk"]["mde_risk_difference_80pct_power"],
+ "race_missing_n": RG["missing_data"]["race_missing_n"], "race_missing_pct": RG["missing_data"]["race_missing_pct"],
+ "candidate_predictors": RG["study_size"]["candidate_predictors"], "validation_events": RG["study_size"]["validation_events"],
+ "development_events": RG["study_size"]["development_events"],
+ "epp_development": round(RG["study_size"]["development_events"]/RG["study_size"]["candidate_predictors"], 1),
+ "median_dp_per_patient": RG["follow_up"]["median_decision_points_per_patient"],
+ "iqr_dp_per_patient": RG["follow_up"]["iqr_decision_points"],
+ "median_days_to_last_contact": RG["follow_up"]["median_days_enrolment_to_last_contact"],
+ "iqr_days_to_last_contact": RG["follow_up"]["iqr_days"],
+ "patient_years": RG["follow_up"]["total_patient_years"],
+ "quintile_cuts": RG["category_boundaries"]["predicted_risk_quintile_cuts"],
+ "spending_quartile_cuts": RG["category_boundaries"]["prior_spending_quartile_cuts_usd"],
 }
 json.dump(C, open(R/"canonical.json", "w"), indent=1, default=str)
 
 # ---------------- tables to markdown ------------------------------------------------------------------
 def md(df, idx=False): return df.to_markdown(index=idx)
+# main exhibits for a 5-exhibit journal: cohort, performance at both index points, operating points
+KEEP = ["Stacked ensemble, calibrated", "Acute care risk score (comparator)"]
+best_b = NAMES[mB["comparisons"]["best_single_learner"]]; best_a = NAMES[mA["comparisons"]["best_single_learner"]]
+def slim(tbl, best, label):
+    rows = [dict(r) for r in tbl.to_dict("records") if r["Model"] in KEEP + [best]]
+    for r in rows: r["Index point"] = label
+    return rows
+T2main = pd.DataFrame(slim(T2, best_b, "At each contact") + slim(T3, best_a, "At enrolment"))
+T2main = T2main[["Index point", "Model", "AUROC (95% CI)", "AUPRC (95% CI)", "Sensitivity", "Specificity", "PPV", "Calibration slope"]]
+C["table2_main"] = T2main.to_dict("records")
+main = {"Table 1": T1.reset_index(), "Table 2": T2main, "Table 3": T7}
+appx = {"eTable 1. Full learner performance at each contact": T2,
+        "eTable 2. Full learner performance at enrolment": T3,
+        "eTable 3. Confusion matrices at a 20% flagging fraction": T4,
+        "eTable 4. Agreement with acute care risk, and associations with utilization and cost": T5,
+        "eTable 5. Utilization and cost among patients matched on baseline risk": T5b,
+        "eTable 6. Care-team actions, estimators and active comparators": T6,
+        "eTable 7. Open needs at the last contact, among comparable patients": T8}
+md2 = lambda d: "\n\n".join(f"**{k}**\n\n{v.to_markdown(index=False)}" for k, v in d.items())
+(NB/"tables_main_v4.md").write_text(md2(main))
+(NB/"tables_appendix_v4.md").write_text(md2(appx))
 tb = {"Table 1": T1.reset_index(), "Table 2": T2, "Table 3": T3, "Table 4": T4, "Table 5": T5,
       "Table 5b": T5b, "Table 6": T6, "Table 7": T7, "Table 8": T8}
 (NB/"tables_v4.md").write_text("\n\n".join(f"**{k}**\n\n{md(v)}" for k, v in tb.items()))
