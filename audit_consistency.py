@@ -56,10 +56,21 @@ facts = {
  "sensitivity excluding day 0 AUROC": f3(SE["excluding_enrollment_day_contact"]["auroc"]),
  "sensitivity base AUROC": f3(SE["base_lightgbm"]["auroc"]),
 }
-MAT, THR, ADV = C["matching"], C["thresholds"], C["actions_advanced"]
+MAT, THR, ADV, NE = C["matching"], C["thresholds"], C["actions_advanced"], C["needs"]
+NL, NP, NLP, CP = D["needs_last_contact"], D["needs_with_plan"], D["needs_late_plan"], D["care_plan_presence"]
 facts.update({
  "youden sensitivity": f3(D["youden"]["sensitivity"]), "youden specificity": f3(D["youden"]["specificity"]),
  "youden flag %": f"{100*D['youden']['flag_rate']:.1f}", "youden NNF": f"{D['youden']['number_needed_to_flag']:.2f}",
+ "open need disengaged %": p1(NL["any open need"]["disengaged_pct"]), "open need sustained %": p1(NL["any open need"]["sustained_pct"]),
+ "open medical disengaged %": p1(NL["any open medical need"]["disengaged_pct"]), "open medical sustained %": p1(NL["any open medical need"]["sustained_pct"]),
+ "open social disengaged %": p1(NL["any open social need"]["disengaged_pct"]), "open social sustained %": p1(NL["any open social need"]["sustained_pct"]),
+ "open need aOR": f3(NL["any open need"]["adjusted_or"]),
+ "care plan disengaged %": p1(CP["with_plan_disengaged_pct"]), "care plan sustained %": p1(CP["with_plan_sustained_pct"]),
+ "mean goals disengaged": f"{CP['mean_goals_before_disengaged']:.2f}", "mean goals sustained": f"{CP['mean_goals_before_sustained']:.2f}",
+ "with-plan open need disengaged %": p1(NP["any open need"]["disengaged_pct"]), "with-plan open need sustained %": p1(NP["any open need"]["sustained_pct"]),
+ "late open medical disengaged %": p1(NLP["any open medical need"]["disengaged_pct"]), "late open medical sustained %": p1(NLP["any open medical need"]["sustained_pct"]),
+ "needs n with plan": n(D["needs_n_with_plan"]), "needs n late plan": n(D["needs_n_late_plan"]),
+ "text kappa medical": f3(D["needs_text_kappa_medical"]), "text kappa social": f3(D["needs_text_kappa_social"]),
  "top20 sensitivity": f3(D["top20"]["sensitivity"]), "top20 specificity": f3(D["top20"]["specificity"]),
  "top20 NNF": f"{D['top20']['number_needed_to_flag']:.2f}", "top30 sensitivity": f3(D["top30"]["sensitivity"]),
  "matched pairs": n(D["match_pairs"]), "matched max SMD": f"{D['match_smd']:.3f}",

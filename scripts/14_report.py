@@ -17,7 +17,8 @@ flow, outc, mB, mA, conc, act, land, sens, phys = (J("flow_v4.json"), J("outcome
     J("metrics_A_full.json"), J("concordance_v4.json"), J("actions_v4.json"), J("landmarks_v4.json"), J("sensitivity_v4.json"), J("physician_sample_v4.json"))
 mod = J("models_B_full.json")
 MAT, THR, ADV = J("matching_v4.json"), J("thresholds_v4.json"), J("actions_advanced_v4.json")
-C = {"matching": MAT, "thresholds": THR, "actions_advanced": ADV, "flow": flow, "outcomes": outc, "metrics_taskB": mB, "metrics_taskA": mA, "concordance": conc,
+NEEDS = J("needs_v4.json")
+C = {"matching": MAT, "thresholds": THR, "actions_advanced": ADV, "needs": NEEDS, "flow": flow, "outcomes": outc, "metrics_taskB": mB, "metrics_taskA": mA, "concordance": conc,
      "actions": act, "landmarks": land, "sensitivity": sens, "physician_sample": phys, "models": mod,
      "text": J("text_v4.json"), "pull": J("pull_manifest_v4.json")}
 
@@ -155,6 +156,18 @@ for key, v in ADV.items():
                  "Calibrated against negative controls": (f"{ec['calibrated_rd']:+.3f} ({ec['calibrated_ci_95'][0]:+.3f} to {ec['calibrated_ci_95'][1]:+.3f})" if ec else "")})
 T6 = pd.DataFrame(rows); C["table6"] = T6.to_dict("records")
 
+# ---------------- Table 8: documented open needs at the last contact -------------------------------
+def needrows(block, label):
+    return [{"Population": label, "Measure": r["measure"].capitalize(),
+             "Disengaged, %": f"{r['disengaged_pct']:.1f}", "Sustained engagement, %": f"{r['sustained_pct']:.1f}",
+             "Difference, percentage points": f"{r['difference_pp']:+.1f}",
+             "Adjusted odds ratio (95% CI)": (f"{r['adjusted_or']:.3f} ({r['adjusted_ci_95'][0]:.3f} to {r['adjusted_ci_95'][1]:.3f})" if "adjusted_or" in r else "not estimable")}
+            for r in block]
+rows = (needrows(NEEDS["last_contact"], "All patients, last contact")
+        + needrows(NEEDS["among_patients_with_a_care_plan"]["comparisons"], "Patients with a documented care plan")
+        + needrows(NEEDS["late_contacts_with_a_care_plan"]["comparisons"], "Care plan and contact at least 30 days after enrolment"))
+T8 = pd.DataFrame(rows); C["table8"] = T8.to_dict("records")
+
 # ---------------- derived numbers for the text -------------------------------------------------------
 vs = pd.read_parquet(D/"v4_valscores_B_full.parquet")
 C["derived"] = {
@@ -203,13 +216,23 @@ C["derived"] = {
  "within_decile_ed_ratios": [v["ed_ratio"] for v in MAT["within_risk_decile"].values()],
  "within_decile_cost_ratios": [v["cost_ratio"] for v in MAT["within_risk_decile"].values()],
  "adv": {k: ADV[k] for k in ADV if k != "note"},
+ "needs_last_contact": {r["measure"]: r for r in NEEDS["last_contact"]},
+ "needs_with_plan": {r["measure"]: r for r in NEEDS["among_patients_with_a_care_plan"]["comparisons"]},
+ "needs_late_plan": {r["measure"]: r for r in NEEDS["late_contacts_with_a_care_plan"]["comparisons"]},
+ "care_plan_presence": NEEDS["care_plan_presence"],
+ "needs_counts": NEEDS["last_contact_counts"],
+ "needs_n_with_plan": NEEDS["among_patients_with_a_care_plan"]["n"],
+ "needs_n_late_plan": NEEDS["late_contacts_with_a_care_plan"]["n"],
+ "needs_text_kappa_medical": NEEDS["text_lexicon_vs_structured"]["medical"]["kappa"],
+ "needs_text_kappa_social": NEEDS["text_lexicon_vs_structured"]["social"]["kappa"],
+ "needs_top_categories": NEEDS["by_category"][:6],
 }
 json.dump(C, open(R/"canonical.json", "w"), indent=1, default=str)
 
 # ---------------- tables to markdown ------------------------------------------------------------------
 def md(df, idx=False): return df.to_markdown(index=idx)
 tb = {"Table 1": T1.reset_index(), "Table 2": T2, "Table 3": T3, "Table 4": T4, "Table 5": T5,
-      "Table 5b": T5b, "Table 6": T6, "Table 7": T7}
+      "Table 5b": T5b, "Table 6": T6, "Table 7": T7, "Table 8": T8}
 (NB/"tables_v4.md").write_text("\n\n".join(f"**{k}**\n\n{md(v)}" for k, v in tb.items()))
 
 # ---------------- figures -------------------------------------------------------------------------------

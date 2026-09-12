@@ -1,3 +1,5 @@
+"""SUPERSEDED 2026-09-12: the blinded physician panel was replaced by the structured care-plan measure
+in 11_needs_structured.py. This script is retained for provenance and is not part of the pipeline."""
 """v4 step 10: blinded physician adjudication sample (pre-registration Section 11).
 
 200 validation-era contacts: 100 whose patient disengaged after the contact and 100 whose patient

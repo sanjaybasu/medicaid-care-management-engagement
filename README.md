@@ -17,7 +17,8 @@ The locked analysis plan is `PREREGISTRATION_v4_engagement.md`. Every number in 
 | `scripts/06_ensemble_metrics.py` | Stacking, calibration, metrics with bootstrap intervals, decision curve, fairness |
 | `scripts/08_concordance.py` | Agreement with acute care risk; utilization and cost associations |
 | `scripts/09_actions.py` | Care-team actions with falsification gates |
-| `scripts/10_physician_sample.py` | Blinded physician adjudication sample |
+| `scripts/11_needs_structured.py` | Open medical and social needs at the last contact, from the structured care plan |
+| `scripts/00c_pull_tasks.py` | Care-plan tasks |
 | `scripts/15_matching.py` | Utilization and cost among patients matched on baseline risk: within-decile pooling, propensity matching, coarsened exact matching, overlap weights |
 | `scripts/16_actions_advanced.py` | Actions with overlap weights, TMLE, doubly robust learner, causal forest, active comparators, and empirical calibration |
 | `scripts/17_thresholds.py` | Operating points, including the Youden-optimal threshold |
@@ -26,7 +27,7 @@ The locked analysis plan is `PREREGISTRATION_v4_engagement.md`. Every number in 
 | `scripts/14_report.py` | Canonical numbers, tables, figures |
 | `audit_consistency.py` | Verifies the manuscript against the canonical file |
 
-Run order: 00, 00b, 01, 02, 03, 04, 05 (B then A), 06 (B then A), 08, 09, 10, 12, 13, 15, 16, 17, 14, audit.
+Run order: 00, 00b, 00c, 01, 02, 03, 04, 05 (B then A), 06 (B then A), 08, 09, 11, 12, 13, 15, 16, 17, 14, audit.
 
 ## License
 
