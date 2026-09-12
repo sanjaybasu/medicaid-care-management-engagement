@@ -4,7 +4,8 @@ P = pathlib.Path(__file__).resolve().parent
 C = json.load(open(P/"results"/"canonical.json"))
 MS = (P.parent.parent/"notebooks"/"care-management-engagement"/"manuscript_engagement_prediction_DigitalHealth.md").read_text()
 TB = (P.parent.parent/"notebooks"/"care-management-engagement"/"tables_v4.md").read_text()
-TEXT = MS + "\n" + TB
+APP = (P.parent.parent/"notebooks"/"care-management-engagement"/"supplementary_appendix_v4.md").read_text()
+TEXT = MS + "\n" + TB + "\n" + APP
 D, F, O, MB, MA, CO, AC, LA, SE = (C["derived"], C["flow"], C["outcomes"], C["metrics_taskB"], C["metrics_taskA"],
                                    C["concordance"], C["actions"], C["landmarks"], C["sensitivity"])
 n = lambda x: f"{int(round(float(x))):,}"
@@ -70,6 +71,14 @@ facts.update({
  "with-plan open need disengaged %": p1(NP["any open need"]["disengaged_pct"]), "with-plan open need sustained %": p1(NP["any open need"]["sustained_pct"]),
  "late open medical disengaged %": p1(NLP["any open medical need"]["disengaged_pct"]), "late open medical sustained %": p1(NLP["any open medical need"]["sustained_pct"]),
  "needs n with plan": n(D["needs_n_with_plan"]), "needs n late plan": n(D["needs_n_late_plan"]),
+ "needs matched clinical OR": f3(D["needs_matched"]["matched_clinical_risk_only"]["estimates"]["any open need"]["odds_ratio"]),
+ "needs matched depth OR": f3(D["needs_matched"]["matched_clinical_and_contact_depth"]["estimates"]["any open need"]["odds_ratio"]),
+ "needs overlap OR": f3(D["needs_matched"]["overlap_weights_full"]["estimates"]["any open need"]["odds_ratio"]),
+ "needs matched depth disengaged %": p1(D["needs_matched"]["matched_clinical_and_contact_depth"]["estimates"]["any open need"]["disengaged"]),
+ "needs matched depth sustained %": p1(D["needs_matched"]["matched_clinical_and_contact_depth"]["estimates"]["any open need"]["sustained"]),
+ "needs matched pairs": n(D["needs_matched"]["matched_clinical_risk_only"]["pairs"]),
+ "open share disengaged": f3(D["needs_matched"]["overlap_weights_full"]["estimates"]["share of the care plan still open"]["disengaged"]),
+ "open share sustained": f3(D["needs_matched"]["overlap_weights_full"]["estimates"]["share of the care plan still open"]["sustained"]),
  "text kappa medical": f3(D["needs_text_kappa_medical"]), "text kappa social": f3(D["needs_text_kappa_social"]),
  "top20 sensitivity": f3(D["top20"]["sensitivity"]), "top20 specificity": f3(D["top20"]["specificity"]),
  "top20 NNF": f"{D['top20']['number_needed_to_flag']:.2f}", "top30 sensitivity": f3(D["top30"]["sensitivity"]),

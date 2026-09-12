@@ -17,8 +17,8 @@ flow, outc, mB, mA, conc, act, land, sens, phys = (J("flow_v4.json"), J("outcome
     J("metrics_A_full.json"), J("concordance_v4.json"), J("actions_v4.json"), J("landmarks_v4.json"), J("sensitivity_v4.json"), J("physician_sample_v4.json"))
 mod = J("models_B_full.json")
 MAT, THR, ADV = J("matching_v4.json"), J("thresholds_v4.json"), J("actions_advanced_v4.json")
-NEEDS = J("needs_v4.json")
-C = {"matching": MAT, "thresholds": THR, "actions_advanced": ADV, "needs": NEEDS, "flow": flow, "outcomes": outc, "metrics_taskB": mB, "metrics_taskA": mA, "concordance": conc,
+NEEDS, NM, RC = J("needs_v4.json"), J("needs_matched_v4.json"), J("reviewer_checks_v4.json")
+C = {"matching": MAT, "thresholds": THR, "actions_advanced": ADV, "needs": NEEDS, "needs_matched": NM, "reviewer_checks": RC, "flow": flow, "outcomes": outc, "metrics_taskB": mB, "metrics_taskA": mA, "concordance": conc,
      "actions": act, "landmarks": land, "sensitivity": sens, "physician_sample": phys, "models": mod,
      "text": J("text_v4.json"), "pull": J("pull_manifest_v4.json")}
 
@@ -166,6 +166,20 @@ def needrows(block, label):
 rows = (needrows(NEEDS["last_contact"], "All patients, last contact")
         + needrows(NEEDS["among_patients_with_a_care_plan"]["comparisons"], "Patients with a documented care plan")
         + needrows(NEEDS["late_contacts_with_a_care_plan"]["comparisons"], "Care plan and contact at least 30 days after enrolment"))
+SPEC8 = {"unadjusted": "Unadjusted", "matched_clinical_risk_only": "Matched on acute care risk and clinical history",
+         "matched_clinical_and_contact_depth": "Matched also on contact history and care-plan size",
+         "overlap_weights_full": "Overlap weights on all covariates"}
+rows = []
+for k, lab in SPEC8.items():
+    v = NM[k]
+    bal = v["balance"]["max_abs_smd"] if "balance" in v else v["balance_full"]["max_abs_smd"]
+    for r in v["estimates"]:
+        eff = (f"{r['odds_ratio']:.3f} ({r['ci_95'][0]:.3f} to {r['ci_95'][1]:.3f})" if "odds_ratio" in r
+               else f"{r['difference']:+.3f} ({r['ci_95'][0]:+.3f} to {r['ci_95'][1]:+.3f})")
+        rows.append({"Specification": lab, "Maximum absolute standardized difference": f"{bal:.3f}",
+                     "Measure": r["measure"].capitalize(), "Patients": f"{r['n']:,}",
+                     "Disengaged": r["disengaged"], "Sustained engagement": r["sustained"],
+                     "Odds ratio or difference (95% CI)": eff})
 T8 = pd.DataFrame(rows); C["table8"] = T8.to_dict("records")
 
 # ---------------- derived numbers for the text -------------------------------------------------------
@@ -226,6 +240,18 @@ C["derived"] = {
  "needs_text_kappa_medical": NEEDS["text_lexicon_vs_structured"]["medical"]["kappa"],
  "needs_text_kappa_social": NEEDS["text_lexicon_vs_structured"]["social"]["kappa"],
  "needs_top_categories": NEEDS["by_category"][:6],
+ "needs_matched": {k: {"max_smd": (NM[k]["balance"]["max_abs_smd"] if "balance" in NM[k] else NM[k]["balance_full"]["max_abs_smd"]),
+                       "n": NM[k].get("n", NM["n"]), "pairs": NM[k].get("pairs"),
+                       "estimates": {r["measure"]: r for r in NM[k]["estimates"]}}
+                   for k in ["unadjusted", "matched_clinical_risk_only", "matched_clinical_and_contact_depth", "overlap_weights_full"]},
+ "needs_by_contacts": NM["by_number_of_prior_contacts"],
+ "excluded_contacts_mean": RC["excluded_vs_included"]["mean_completed_contacts_excluded"],
+ "included_contacts_mean": RC["excluded_vs_included"]["mean_completed_contacts_analysed"],
+ "risk_iqr": RC["risk_score_range"]["iqr"], "risk_median": RC["risk_score_range"]["median"],
+ "auroc_by_state": {k: v["auroc_ensemble"] for k, v in RC["discrimination_by_state"].items()},
+ "risk_auroc_by_state": {k: v["auroc_risk_score"] for k, v in RC["discrimination_by_state"].items()},
+ "ac1_mde": RC["active_comparator_power"]["AC1_inperson_vs_phone_chw_14d__all_risk"]["mde_risk_difference_80pct_power"],
+ "ac2_mde": RC["active_comparator_power"]["AC2_therapy_vs_pharmacy_30d__all_risk"]["mde_risk_difference_80pct_power"],
 }
 json.dump(C, open(R/"canonical.json", "w"), indent=1, default=str)
 
