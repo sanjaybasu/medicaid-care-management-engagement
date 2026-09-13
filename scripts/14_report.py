@@ -279,13 +279,13 @@ T2main = pd.DataFrame(slim(T2, best_b, "At each contact") + slim(T3, best_a, "At
 T2main = T2main[["Index point", "Model", "AUROC (95% CI)", "AUPRC (95% CI)", "Sensitivity", "Specificity", "PPV", "Calibration slope"]]
 C["table2_main"] = T2main.to_dict("records")
 main = {"Table 1": T1.reset_index(), "Table 2": T2main, "Table 3": T7}
-appx = {"eTable 1. Full learner performance at each contact": T2,
-        "eTable 2. Full learner performance at enrolment": T3,
-        "eTable 3. Confusion matrices at a 20% flagging fraction": T4,
-        "eTable 4. Agreement with acute care risk, and associations with utilization and cost": T5,
-        "eTable 5. Utilization and cost among patients matched on baseline risk": T5b,
-        "eTable 6. Care-team actions, estimators and active comparators": T6,
-        "eTable 7. Open needs at the last contact, among comparable patients": T8}
+appx = {"Appendix Table 1. Full learner performance at each contact": T2,
+        "Appendix Table 2. Full learner performance at enrolment": T3,
+        "Appendix Table 3. Confusion matrices at a 20% flagging fraction": T4,
+        "Appendix Table 4. Agreement with acute care risk, and associations with utilization and cost": T5,
+        "Appendix Table 5. Utilization and cost among patients matched on baseline risk": T5b,
+        "Appendix Table 6. Care-team actions, estimators and active comparators": T6,
+        "Appendix Table 7. Open needs at the last contact, among comparable patients": T8}
 md2 = lambda d: "\n\n".join(f"**{k}**\n\n{v.to_markdown(index=False)}" for k, v in d.items())
 (NB/"tables_main_v4.md").write_text(md2(main))
 (NB/"tables_appendix_v4.md").write_text(md2(appx))
