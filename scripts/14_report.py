@@ -296,7 +296,7 @@ tb = {"Table 1": T1.reset_index(), "Table 2": T2, "Table 3": T3, "Table 4": T4, 
 (NB/"tables_v4.md").write_text("\n\n".join(f"**{k}**\n\n{md(v)}" for k, v in tb.items()))
 
 # ---------------- figures -------------------------------------------------------------------------------
-plt.rcParams.update({"font.size": 9, "figure.dpi": 200, "savefig.bbox": "tight", "axes.spines.top": False, "axes.spines.right": False})
+plt.rcParams.update({"font.size": 9, "figure.dpi": 400, "savefig.dpi": 400, "savefig.bbox": "tight", "axes.spines.top": False, "axes.spines.right": False})
 sc = np.load(R/"val_scores_B_full.npy"); pe, pr, yv = sc[:, 0], sc[:, 1], sc[:, 2]
 fig, ax = plt.subplots(1, 3, figsize=(10, 3.2))
 for p, lab in [(pe, "Stacked ensemble"), (pr, "Acute care risk score")]:
