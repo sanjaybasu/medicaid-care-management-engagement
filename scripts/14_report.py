@@ -184,6 +184,7 @@ T8 = pd.DataFrame(rows); C["table8"] = T8.to_dict("records")
 
 # ---------------- derived numbers for the text -------------------------------------------------------
 vs = pd.read_parquet(D/"v4_valscores_B_full.parquet")
+OPS = {r["operating_point"]: r for r in THR["B"]["operating_points"]}
 C["derived"] = {
  "patients_enrolled_in_period": flow["enrolled_in_study_period"],
  "taskA_patients": int(len(EA)), "taskA_dev": int((EA.era == "development").sum()), "taskA_val": int((EA.era == "validation").sum()),
@@ -216,9 +217,10 @@ C["derived"] = {
  "equalized_odds_race": mB["fairness"]["race"]["equalized_odds_ratio"],
  "equalized_odds_state": mB["fairness"]["state"]["equalized_odds_ratio"],
  "n_actions_passing_gates": int(sum(1 for v in act["actions"].values() if v.get("gates", {}).get("all_pass"))),
- "youden": {k: THR["B"]["operating_points"][-4][k] for k in ["threshold", "flag_rate", "sensitivity", "specificity", "ppv", "youden_j", "number_needed_to_flag", "flagged_per_week"]},
- "top20": {k: THR["B"]["operating_points"][2][k] for k in ["flag_rate", "sensitivity", "specificity", "ppv", "number_needed_to_flag", "flagged_per_week"]},
- "top30": {k: THR["B"]["operating_points"][3][k] for k in ["flag_rate", "sensitivity", "specificity", "ppv"]},
+ "youden": {k: OPS["Youden-optimal"][k] for k in ["threshold", "flag_rate", "sensitivity", "specificity", "ppv", "youden_j", "number_needed_to_flag", "flagged_per_week"]},
+ "f1_optimal": {k: OPS["F1-optimal"][k] for k in ["flag_rate", "sensitivity", "specificity", "ppv"]},
+ "top20": {k: OPS["top 20% of contacts"][k] for k in ["flag_rate", "sensitivity", "specificity", "ppv", "number_needed_to_flag", "flagged_per_week"]},
+ "top30": {k: OPS["top 30% of contacts"][k] for k in ["flag_rate", "sensitivity", "specificity", "ppv"]},
  "match_ed": MAT["propensity_matched"]["estimates"]["ed_91_270"], "match_ip": MAT["propensity_matched"]["estimates"]["ip_91_270"],
  "match_cost": MAT["propensity_matched"]["estimates"]["total_paid_91_270"],
  "match_negctrl_ed": MAT["propensity_matched"]["estimates"]["ed_pre365"],

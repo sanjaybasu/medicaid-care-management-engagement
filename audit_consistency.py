@@ -62,6 +62,8 @@ NL, NP, NLP, CP = D["needs_last_contact"], D["needs_with_plan"], D["needs_late_p
 facts.update({
  "youden sensitivity": f3(D["youden"]["sensitivity"]), "youden specificity": f3(D["youden"]["specificity"]),
  "youden flag %": f"{100*D['youden']['flag_rate']:.1f}", "youden NNF": f"{D['youden']['number_needed_to_flag']:.2f}",
+ "F1 sensitivity": f3(D["f1_optimal"]["sensitivity"]), "F1 specificity": f3(D["f1_optimal"]["specificity"]),
+ "F1 flag %": f"{100*D['f1_optimal']['flag_rate']:.1f}",
  "open need disengaged %": p1(NL["any open need"]["disengaged_pct"]), "open need sustained %": p1(NL["any open need"]["sustained_pct"]),
  "open medical disengaged %": p1(NL["any open medical need"]["disengaged_pct"]), "open medical sustained %": p1(NL["any open medical need"]["sustained_pct"]),
  "open social disengaged %": p1(NL["any open social need"]["disengaged_pct"]), "open social sustained %": p1(NL["any open social need"]["sustained_pct"]),
