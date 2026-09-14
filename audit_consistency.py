@@ -119,6 +119,20 @@ fails = [(k, v) for k, v in facts.items() if v not in TEXT]
 print(f"{'FACT':46s} VALUE      IN TEXT")
 for k, v in facts.items():
     print(f"{k:46s} {v:10s} {'yes' if v in TEXT else 'NO'}")
+
+# every appendix item the manuscript points to must exist as a heading in the appendix
+import re as _re
+refs = sorted(set(_re.findall(r"Appendix (?:Table|Figure|Note) \d+", MS)))
+heads = set(_re.findall(r"^#+\s*(Appendix (?:Table|Figure|Note) \d+)", APP, _re.M)) | set(_re.findall(r"\*\*(Appendix (?:Table|Figure|Note) \d+)\.", APP))
+missing_refs = [r for r in refs if r not in heads]
+main_tabs = sorted(set(_re.findall(r"\*\*(Table \d+)\.", MS)))
+tab_file = (P.parent.parent/"notebooks"/"care-management-engagement"/"tables_main_v4.md").read_text()
+missing_tabs = [t for t in main_tabs if f"**{t}**" not in tab_file]
+print(f"\ncross-references: {len(refs)} appendix items cited, missing {missing_refs or 'none'}")
+print(f"main tables with legends: {main_tabs}, missing from exhibits file: {missing_tabs or 'none'}")
+if missing_refs or missing_tabs:
+    fails = fails + [("cross-reference", str(missing_refs + missing_tabs))]
+
 print(f"\nchecked {len(facts)} facts | FAIL {len(fails)}")
 if fails:
     print("missing:", fails)
