@@ -125,13 +125,17 @@ import re as _re
 refs = sorted(set(_re.findall(r"Appendix (?:Table|Figure|Note) \d+", MS)))
 heads = set(_re.findall(r"^#+\s*(Appendix (?:Table|Figure|Note) \d+)", APP, _re.M)) | set(_re.findall(r"\*\*(Appendix (?:Table|Figure|Note) \d+)\.", APP))
 missing_refs = [r for r in refs if r not in heads]
+cited = set(refs)
+for kind, lo, hi in _re.findall(r"Appendix (Tables|Figures|Notes) (\d+) (?:and|to) (\d+)", MS):
+    cited |= {f"Appendix {kind[:-1]} {i}" for i in range(int(lo), int(hi)+1)}
+uncited = [h for h in sorted(heads) if h not in cited]
 main_tabs = sorted(set(_re.findall(r"\*\*(Table \d+)\.", MS)))
 tab_file = (P.parent.parent/"notebooks"/"care-management-engagement"/"tables_main_v4.md").read_text()
 missing_tabs = [t for t in main_tabs if f"**{t}**" not in tab_file]
-print(f"\ncross-references: {len(refs)} appendix items cited, missing {missing_refs or 'none'}")
+print(f"\ncross-references: {len(heads)} appendix items, missing from appendix {missing_refs or 'none'}, never cited {uncited or 'none'}")
 print(f"main tables with legends: {main_tabs}, missing from exhibits file: {missing_tabs or 'none'}")
-if missing_refs or missing_tabs:
-    fails = fails + [("cross-reference", str(missing_refs + missing_tabs))]
+if missing_refs or missing_tabs or uncited:
+    fails = fails + [("cross-reference", str(missing_refs + missing_tabs + uncited))]
 
 print(f"\nchecked {len(facts)} facts | FAIL {len(fails)}")
 if fails:
