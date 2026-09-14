@@ -18,7 +18,8 @@ flow, outc, mB, mA, conc, act, land, sens, phys = (J("flow_v4.json"), J("outcome
 mod = J("models_B_full.json")
 MAT, THR, ADV = J("matching_v4.json"), J("thresholds_v4.json"), J("actions_advanced_v4.json")
 NEEDS, NM, RC, RG = J("needs_v4.json"), J("needs_matched_v4.json"), J("reviewer_checks_v4.json"), J("reporting_gaps_v4.json")
-C = {"matching": MAT, "thresholds": THR, "actions_advanced": ADV, "needs": NEEDS, "needs_matched": NM, "reviewer_checks": RC, "reporting_gaps": RG, "flow": flow, "outcomes": outc, "metrics_taskB": mB, "metrics_taskA": mA, "concordance": conc,
+CN, EX, SD = J("claims_based_need_v4.json"), J("examiner_design_v4.json"), J("staff_departure_v4.json")
+C = {"matching": MAT, "thresholds": THR, "actions_advanced": ADV, "needs": NEEDS, "needs_matched": NM, "reviewer_checks": RC, "reporting_gaps": RG, "claims_need": CN, "examiner": EX, "departure": SD, "flow": flow, "outcomes": outc, "metrics_taskB": mB, "metrics_taskA": mA, "concordance": conc,
      "actions": act, "landmarks": land, "sensitivity": sens, "physician_sample": phys, "models": mod,
      "text": J("text_v4.json"), "pull": J("pull_manifest_v4.json")}
 
@@ -247,6 +248,11 @@ C["derived"] = {
                        "estimates": {r["measure"]: r for r in NM[k]["estimates"]}}
                    for k in ["unadjusted", "matched_clinical_risk_only", "matched_clinical_and_contact_depth", "overlap_weights_full"]},
  "needs_by_contacts": NM["by_number_of_prior_contacts"],
+ "claims_need": {r["measure"]: r for r in CN["measures"]},
+ "claims_need_balance": CN["overlap_balance_max_abs_smd"],
+ "examiner_first_stage_F": EX["first_stage"]["F"],
+ "examiner_worst_smd": max(abs(v["standardized"]) for v in EX["within_cell_balance"].values()),
+ "departure_first_stage_F": SD["first_stage_effect_on_disengagement"]["F"],
  "excluded_contacts_mean": RC["excluded_vs_included"]["mean_completed_contacts_excluded"],
  "included_contacts_mean": RC["excluded_vs_included"]["mean_completed_contacts_analysed"],
  "risk_iqr": RC["risk_score_range"]["iqr"], "risk_median": RC["risk_score_range"]["median"],
