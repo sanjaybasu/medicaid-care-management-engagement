@@ -32,5 +32,7 @@ $PY scripts/27_parsimonious_baseline.py
 $PY scripts/28_coverage_sensitivity.py
 $PY scripts/29_equalized_odds.py
 $PY scripts/30_youden_confusion.py
+$PY scripts/31_foundation_models.py A 8   # post hoc comparators; TabPFN needs TABPFN_TOKEN
+$PY scripts/31_foundation_models.py B 8
 $PY scripts/14_report.py
 $PY audit_consistency.py SageOpenMed

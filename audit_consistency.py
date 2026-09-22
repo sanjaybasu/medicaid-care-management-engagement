@@ -143,6 +143,16 @@ for _a, _lbl in [("race", "race"), ("state", "state"), ("gender", "sex"), ("age_
     facts[f"TPR ratio {_lbl}"] = f"{_v['tpr_ratio']['estimate']:.2f}"
 facts["FPR age under 35"] = f"{EO['groups']['age_band']['under 35']['fpr']:.3f}"
 facts["FPR age 65 and older"] = f"{EO['groups']['age_band']['65 and older']['fpr']:.3f}"
+# tabular foundation model comparators (post hoc; scripts/31_foundation_models.py)
+for _t, _lbl in [("B", "contacts"), ("A", "enrollment")]:
+    _f = P/"results"/f"foundation_models_{_t}_v4.json"
+    if not _f.exists(): continue
+    _FM = json.load(open(_f))
+    for _m in [m for m in ("tabpfn", "tabfm") if m in _FM["models"]]:
+        _v = _FM["models"][_m]["auroc"]
+        facts[f"{_m} AUROC {_lbl}"] = f"{_v['estimate']:.3f} (95% CI {_v['ci_95'][0]:.3f} to {_v['ci_95'][1]:.3f})"
+        _d = _FM["comparisons"][f"ensemble_minus_{_m}_auroc"]
+        facts[f"ensemble minus {_m} {_lbl}"] = f"{_d['diff']:.3f} (95% CI {_d['ci_95'][0]:.3f} to {_d['ci_95'][1]:.3f})"
 
 fails = [(k, v) for k, v in facts.items() if v not in TEXT]
 print(f"{'FACT':46s} VALUE      IN TEXT")
