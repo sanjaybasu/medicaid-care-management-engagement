@@ -2,9 +2,11 @@
 import json, pathlib, re, sys
 P = pathlib.Path(__file__).resolve().parent
 C = json.load(open(P/"results"/"canonical.json"))
-MS = (P.parent.parent/"notebooks"/"care-management-engagement"/"manuscript_engagement_prediction_MCRR.md").read_text()
-TB = (P.parent.parent/"notebooks"/"care-management-engagement"/"tables_v4.md").read_text()
-APP = (P.parent.parent/"notebooks"/"care-management-engagement"/"supplementary_appendix_v4.md").read_text()
+N = P.parent.parent/"notebooks"/"care-management-engagement"
+STEM = sys.argv[1] if len(sys.argv)>1 else "MCRR"
+MS = (N/f"manuscript_engagement_prediction_{STEM}.md").read_text()
+TB = (N/(f"tables_{STEM}.md" if (N/f"tables_{STEM}.md").exists() else "tables_v4.md")).read_text()
+APP = (N/(f"supplementary_appendix_{STEM}.md" if (N/f"supplementary_appendix_{STEM}.md").exists() else "supplementary_appendix_v4.md")).read_text()
 TEXT = MS + "\n" + TB + "\n" + APP
 D, F, O, MB, MA, CO, AC, LA, SE = (C["derived"], C["flow"], C["outcomes"], C["metrics_taskB"], C["metrics_taskA"],
                                    C["concordance"], C["actions"], C["landmarks"], C["sensitivity"])
@@ -35,7 +37,6 @@ facts = {
  "ensemble specificity": f3(MB["models"]["ensemble_stacked_calibrated"]["specificity"]["estimate"]),
  "ensemble PPV": f3(MB["models"]["ensemble_stacked_calibrated"]["ppv"]["estimate"]),
  "ensemble true positives": n(cfB["tp"]), "risk score true positives": n(cf0["tp"]), "risk score flags": n(cf0["flagged"]),
- "events captured ratio": str(D["events_captured_ratio"]),
  "ensemble vs best single": f3(D["ensemble_vs_best_single"]["diff"]),
  "landmark low": f3(LA["auroc_range"][0]), "landmark high": f3(LA["auroc_range"][1]),
  "headline landmark AUROC": f3(LH["auroc"]), "headline landmark train": n(LH["train_n"]), "headline landmark test": n(LH["test_n"]),
@@ -51,7 +52,6 @@ facts = {
  "observed ED ratio": f3(obs["ed_91_270"]["ratio"]), "observed IP ratio": f3(obs["ip_91_270"]["ratio"]),
  "observed cost ratio": f3(obs["total_paid_91_270"]["ratio"]),
  "negative control pre period": f3(obs["total_paid_pre180"]["ratio"]), "negative control dialysis": f3(obs["negctrl_paid_1_180"]["ratio"]),
- "equalized odds race": f3(D["equalized_odds_race"]), "equalized odds state": f3(D["equalized_odds_state"]),
  "sensitivity goal-based AUROC": f3(SE["goal_based_completion"]["auroc"]),
  "sensitivity 120-day AUROC": f3(SE["window_120_days"]["auroc"]),
  "sensitivity excluding day 0 AUROC": f3(SE["excluding_enrollment_day_contact"]["auroc"]),
@@ -102,18 +102,47 @@ facts.update({
  "unadjusted cost ratio": f3(MAT["unadjusted"]["estimates"]["total_paid_91_270"]["ratio"]),
  "unadjusted negative control cost": f3(D["unadj_negctrl_cost"]["ratio"]),
  "overlap ED ratio": f3(D["ow_ed"]["ratio"]), "overlap cost ratio": f3(D["ow_cost"]["ratio"]), "overlap max SMD": f"{D['ow_smd']:.3f}",
- "active comparator in-person vs phone": f"{ADV['AC1_inperson_vs_phone_chw_14d__all_risk']['overlap_weighted']['rd']:+.3f}",
- "active comparator therapy vs pharmacy": f"{ADV['AC2_therapy_vs_pharmacy_30d__all_risk']['overlap_weighted']['rd']:+.3f}",
- "active comparator call vs text": f"{ADV['AC3_call_vs_text_attempt_during_lapse__all_risk']['overlap_weighted']['rd']:+.3f}",
- "overlap therapy RD": f"{ADV['A3_therapy_30d__all_risk']['overlap_weighted']['rd']:+.3f}",
- "overlap pharmacist RD": f"{ADV['A4_pharmacist_30d__all_risk']['overlap_weighted']['rd']:+.3f}",
- "overlap CHW RD": f"{ADV['A2_inperson_chw_14d__all_risk']['overlap_weighted']['rd']:+.3f}",
- "overlap attempt RD": f"{ADV['A1_attempt_during_7day_lapse__all_risk']['overlap_weighted']['rd']:+.3f}",
 })
-for k in ["A1_attempt_during_7day_lapse__all_risk", "A2_inperson_chw_14d__all_risk", "A3_therapy_30d__all_risk",
-          "A4_pharmacist_30d__all_risk", "A5_morning_weekday_call_14d__all_risk"]:
-    v = AC["actions"][k]
-    facts[f"{k} AIPW"] = f"{v['aipw']['rd']:+.3f}"
+
+PB, CV = D["parsimonious_baseline"], D["coverage_270"]
+RR, CB = D["rank_agreement_robustness"], D["claims_need_absolute_bounds"]
+facts.update({
+ "rank robustness rho": f3(RR["rho_excluding_below_65"]),
+ "share below 65th percentile": p1(RR["share_below_65th_percentile"]),
+ "claims need lower bound": p1(CB["disengaged_pct_lower"]),
+ "claims need upper bound": p1(CB["disengaged_pct_upper"]),
+})
+
+facts.update({
+ "parsimonious 1-variable AUROC": f3(PB["1 variable: days since last contact"]["auroc"]),
+ "parsimonious 2-variable AUROC": f3(PB["2 variables: + prior contact count"]["auroc"]),
+ "parsimonious 4-variable AUROC": f3(PB["4 variables: + days from enrollment, contacts in 30 d"]["auroc"]),
+ "coverage 270 restricted n": n(CV["n_restricted"]),
+ "coverage 270 pct disengaged": p1(CV["pct_covered_disengaged"]),
+ "coverage 270 pct sustained": p1(CV["pct_covered_sustained"]),
+ "coverage 270 ED ratio": f3(CV["ed_ratio"]), "coverage 270 cost ratio": f3(CV["cost_ratio"]),
+})
+
+_CNM = {m["measure"]: m for m in json.load(open(P/"results"/"claims_based_need_v4.json"))["measures"]}
+for _m, _lab in [("no office visit in the prior 12 months", "no office visit"),
+                 ("stopped filling a medication they had been filling", "stopped medication"),
+                 ("emergency visit in the prior 90 days with no office visit", "ED no follow-up"),
+                 ("inpatient admission in the prior 90 days", "recent admission")]:
+    facts[f"claims gap {_lab} disengaged"] = p1(_CNM[_m]["weighted_disengaged_pct"])
+    facts[f"claims gap {_lab} sustained"] = p1(_CNM[_m]["weighted_sustained_pct"])
+YC, EO = json.load(open(P/"results"/"youden_confusion_v4.json")), json.load(open(P/"results"/"equalized_odds_v4.json"))
+_e, _r = YC["ensemble_stacked_calibrated"], YC["signal_risk_score"]
+facts.update({
+ "youden flags ensemble": n(_e["flagged"]), "youden flags risk score": n(_r["flagged"]),
+ "youden tp ensemble": n(_e["tp"]), "youden tp risk score": n(_r["tp"]),
+ "youden events captured ratio": str(YC["events_captured_ratio"]),
+})
+for _a, _lbl in [("race", "race"), ("state", "state"), ("gender", "sex"), ("age_band", "age")]:
+    _v = EO["attributes"][_a]
+    facts[f"equalized odds {_lbl}"] = f"{_v['equalized_odds_ratio']['estimate']:.2f}"
+    facts[f"TPR ratio {_lbl}"] = f"{_v['tpr_ratio']['estimate']:.2f}"
+facts["FPR age under 35"] = f"{EO['groups']['age_band']['under 35']['fpr']:.3f}"
+facts["FPR age 65 and older"] = f"{EO['groups']['age_band']['65 and older']['fpr']:.3f}"
 
 fails = [(k, v) for k, v in facts.items() if v not in TEXT]
 print(f"{'FACT':46s} VALUE      IN TEXT")
@@ -130,7 +159,7 @@ for kind, lo, hi in _re.findall(r"Appendix (Tables|Figures|Notes) (\d+) (?:and|t
     cited |= {f"Appendix {kind[:-1]} {i}" for i in range(int(lo), int(hi)+1)}
 uncited = [h for h in sorted(heads) if h not in cited]
 main_tabs = sorted(set(_re.findall(r"\*\*(Table \d+)\.", MS)))
-tab_file = (P.parent.parent/"notebooks"/"care-management-engagement"/"tables_main_v4.md").read_text()
+tab_file = MS if "**Table 1**" in MS else TB
 missing_tabs = [t for t in main_tabs if f"**{t}**" not in tab_file]
 print(f"\ncross-references: {len(heads)} appendix items, missing from appendix {missing_refs or 'none'}, never cited {uncited or 'none'}")
 print(f"main tables with legends: {main_tabs}, missing from exhibits file: {missing_tabs or 'none'}")

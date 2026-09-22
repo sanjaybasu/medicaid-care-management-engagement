@@ -57,6 +57,33 @@ for k, v in ADV.items():
     mde[k] = {"n": v["n"], "exposed": n1, "outcome_rate": p,
               "mde_risk_difference_80pct_power": round(float(2.8*np.sqrt(p*(1-p)*(1/max(n1, 1)+1/max(n0, 1)))), 4),
               "observed_rd": v["overlap_weighted"]["rd"], "ci_half_width": round((v["overlap_weighted"]["ci_95"][1]-v["overlap_weighted"]["ci_95"][0])/2, 4)}
+# the acute care risk percentile is truncated in a rising-risk cohort and a minority of
+# patients sit near zero for want of claims history; confirm they do not drive the rank
+# disagreement between predicted disengagement and acute care risk
+from scipy.stats import spearmanr
+_A = pd.read_parquet(D/"v4_outcomes_A.parquet").merge(
+    pd.read_parquet(D/"v4_score_all_A_full.parquet")[["person_id", "p_ensemble"]], on="person_id", how="inner")
+_A["risk_pct"] = pd.to_numeric(_A.risk_percentile, errors="coerce")
+_A = _A[_A.risk_pct.notna()]
+_hi = _A[_A.risk_pct >= 65]
+out["rank_agreement_robustness"] = {
+    "n": int(len(_A)), "rho_all": round(float(spearmanr(_A.p_ensemble, _A.risk_pct).statistic), 3),
+    "share_below_65th_percentile": round(100*float((_A.risk_pct < 65).mean()), 1),
+    "n_at_or_above_65": int(len(_hi)),
+    "rho_excluding_below_65": round(float(spearmanr(_hi.p_ensemble, _hi.risk_pct).statistic), 3)}
+
+# express the null claims-based care-gap odds ratio on the absolute scale it implies
+_cn = json.load(open(R/"claims_based_need_v4.json"))
+_any = next((m for m in _cn["measures"] if m["measure"] == "any of these"), None)
+if _any:
+    _p0 = _any["weighted_sustained_pct"]/100.0
+    _bounds = []
+    for _or in _any["ci_95"]:
+        _o = _p0/(1-_p0)*_or
+        _bounds.append(round(100*_o/(1+_o), 1))
+    out["claims_need_absolute_bounds"] = {"sustained_pct": round(100*_p0, 1),
+                                          "disengaged_pct_lower": _bounds[0], "disengaged_pct_upper": _bounds[1]}
+
 out["active_comparator_power"] = mde
 json.dump(out, open(R/"reviewer_checks_v4.json", "w"), indent=1, default=str)
 print(json.dumps(out, indent=1, default=str))

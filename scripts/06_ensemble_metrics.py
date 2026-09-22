@@ -117,7 +117,7 @@ res["comparisons"] = {
     "ensemble_vs_risk_score_auprc": paired_diff_pr(scores["ensemble_stacked"], scores["signal_risk_score"]),
     "ensemble_vs_best_single_auroc": paired_diff(scores["ensemble_stacked"], scores[best_single]),
     "best_single_learner": best_single,
-    "events_captured_ratio_ensemble_vs_risk": round(res["confusion"]["ensemble_stacked"]["tp"]/max(res["confusion"]["signal_risk_score"]["tp"], 1), 2)}
+    "events_captured_ratio_ensemble_vs_risk": round(res["confusion"]["ensemble_stacked_calibrated"]["tp"]/max(res["confusion"]["signal_risk_score"]["tp"], 1), 2)}
 
 # ---------------- decision curve ------------------------------------------------------------------
 def net_benefit(pp, thr):

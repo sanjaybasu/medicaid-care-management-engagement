@@ -346,5 +346,25 @@ ax.errorbar([v["aipw"]["rd"] for _, v in items], list(ypos),
 ax.axvline(0, color="k", lw=0.8); ax.set_yticks(list(ypos)); ax.set_yticklabels([l for l, _ in items], fontsize=7)
 ax.set_xlabel("Difference in sustained engagement at 90 days (AIPW)")
 fig.savefig(FIG/"figure5_actions.png"); plt.close(fig)
+# analyses that run on their own artifacts (scripts 27 and 28) are folded in when present,
+# so a full pipeline run reproduces every fact the consistency audit checks
+for _k in ("rank_agreement_robustness", "claims_need_absolute_bounds"):
+    if _k in RC:
+        C["derived"][_k] = RC[_k]
+_pb = R/"parsimonious_baseline_v4.json"
+if _pb.exists():
+    C["derived"]["parsimonious_baseline"] = json.load(open(_pb))
+_cc, _cs = R/"coverage_270_check.json", R/"coverage_270_sensitivity.json"
+if _cc.exists() and _cs.exists():
+    chk, sens = json.load(open(_cc)), json.load(open(_cs))
+    rest = sens["restricted to coverage through day 270"]
+    C["derived"]["coverage_270"] = {
+        "n_primary": sens["primary (coverage through day 210)"]["n"], "n_restricted": rest["n"],
+        "pct_covered_disengaged": chk["pct_covered_270_disengaged"],
+        "pct_covered_sustained": chk["pct_covered_270_sustained"],
+        "ed_ratio": rest["estimates"]["ed_91_270"]["ratio"], "ed_ci": rest["estimates"]["ed_91_270"]["ci_95"],
+        "cost_ratio": rest["estimates"]["total_paid_91_270"]["ratio"], "cost_ci": rest["estimates"]["total_paid_91_270"]["ci_95"]}
+json.dump(C, open(R/"canonical.json", "w"), indent=1, default=str)
+
 print("canonical.json, tables_v4.md, and 4 figures written")
 print(json.dumps(C["derived"], indent=1, default=str))

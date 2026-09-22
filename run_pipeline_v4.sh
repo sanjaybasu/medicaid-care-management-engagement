@@ -20,5 +20,17 @@ $PY scripts/13_sensitivity.py
 $PY scripts/15_matching.py
 $PY scripts/16_actions_advanced.py
 $PY scripts/17_thresholds.py
+$PY scripts/18_needs_matched.py
+$PY scripts/19_reviewer_checks.py
+$PY scripts/20_reporting_gaps.py
+$PY scripts/21_design_feasibility.py
+$PY scripts/22_examiner_design.py
+$PY scripts/23_staff_departure.py
+$PY scripts/24_claims_based_need.py
+$PY scripts/25_open_tasks.py
+$PY scripts/27_parsimonious_baseline.py
+$PY scripts/28_coverage_sensitivity.py
+$PY scripts/29_equalized_odds.py
+$PY scripts/30_youden_confusion.py
 $PY scripts/14_report.py
-$PY audit_consistency.py
+$PY audit_consistency.py SageOpenMed

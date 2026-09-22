@@ -115,7 +115,7 @@ A = A.merge(U, on="person_id", how="left")
 A["cost_window_complete"] = (A.enroll_date + pd.Timedelta(days=180)) <= CLAIMS_COMPLETE
 A["cost_window_complete_31_210"] = (A.enroll_date + pd.Timedelta(days=210)) <= CLAIMS_COMPLETE
 A["cost_window_complete_91_270"] = (A.enroll_date + pd.Timedelta(days=270)) <= CLAIMS_COMPLETE
-A["covered_270"] = [covered_days(p, d, 270) for p, d in zip(A.person_id, A.enroll_date)] if False else A.covered_210
+A["covered_270"] = [covered(p, d, 270) for p, d in zip(A.person_id, A.enroll_date)]
 A["util_window_complete"] = (A.enroll_date + pd.Timedelta(days=180)) <= STUDY_END
 A["eligible_cost"] = A.eligible_E2 & A.covered_180 & A.cost_window_complete
 A["eligible_util"] = A.eligible_E2 & A.covered_180 & A.util_window_complete
