@@ -17,6 +17,7 @@ That repository is **a different study on overlapping source data, not an earlie
 |---|---|
 | `scripts/00_pull.py` | Extracts status history, encounters and attempts, goals, admission-discharge-transfer events, risk scores, the person-month outcomes mart, and claim lines for every enrolled patient |
 | `scripts/00b_pull_member_months.py` | Health-plan coverage months |
+| `scripts/00c_pull_tasks.py` | Care-plan tasks |
 | `scripts/01_cohort.py` | Cohort, index events, coverage, temporal split |
 | `scripts/02_outcomes.py` | Outcomes E1 to E4, program completion, utilization and cost windows |
 | `scripts/03_features.py` | Structured feature blocks |
@@ -27,7 +28,9 @@ That repository is **a different study on overlapping source data, not an earlie
 | `scripts/08_concordance.py` | Agreement with acute care risk; utilization and cost associations |
 | `scripts/09_actions.py` | Care-team actions with falsification gates |
 | `scripts/11_needs_structured.py` | Open medical and social needs at the last contact, from the structured care plan |
-| `scripts/00c_pull_tasks.py` | Care-plan tasks |
+| `scripts/12_landmarks.py` | Frozen-model landmark validation |
+| `scripts/13_sensitivity.py` | Pre-specified sensitivity analyses |
+| `scripts/14_report.py` | Canonical numbers, tables, figures |
 | `scripts/15_matching.py` | Utilization and cost among patients matched on baseline risk: within-decile pooling, propensity matching, coarsened exact matching, overlap weights |
 | `scripts/16_actions_advanced.py` | Actions with overlap weights, TMLE, doubly robust learner, causal forest, active comparators, and empirical calibration |
 | `scripts/17_thresholds.py` | Operating points, including the Youden-optimal threshold |
@@ -43,9 +46,6 @@ That repository is **a different study on overlapping source data, not an earlie
 | `scripts/28_coverage_sensitivity.py` | Utilization and cost with continuous coverage required through day 270 (Appendix Table 13) |
 | `scripts/29_equalized_odds.py` | Equalized odds ratios by race and ethnicity, state, sex, and age band with patient-clustered bootstrap CIs (Appendix Table 3) |
 | `scripts/30_youden_confusion.py` | Confusion matrices at the Youden-optimal threshold with the risk score at matched flag volume (Table 4) |
-| `scripts/12_landmarks.py` | Frozen-model landmark validation |
-| `scripts/13_sensitivity.py` | Pre-specified sensitivity analyses |
-| `scripts/14_report.py` | Canonical numbers, tables, figures |
 | `audit_consistency.py` | Verifies the manuscript against the canonical file |
 
 Run order: 00, 00b, 00c, 01, 02, 03, 04, 05 (B then A), 06 (B then A), 08, 09, 11, 12, 13, 15, 16, 17, 14, audit.
