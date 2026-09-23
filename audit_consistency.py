@@ -153,6 +153,13 @@ for _t, _lbl in [("B", "contacts"), ("A", "enrollment")]:
         facts[f"{_m} AUROC {_lbl}"] = f"{_v['estimate']:.3f} (95% CI {_v['ci_95'][0]:.3f} to {_v['ci_95'][1]:.3f})"
         _d = _FM["comparisons"][f"ensemble_minus_{_m}_auroc"]
         facts[f"ensemble minus {_m} {_lbl}"] = f"{_d['diff']:.3f} (95% CI {_d['ci_95'][0]:.3f} to {_d['ci_95'][1]:.3f})"
+    _x = P/"results"/f"extended_ensemble_{_t}_v4.json"
+    if _x.exists():
+        _EX = json.load(open(_x)); _v = _EX["models"]["ensemble_stacked_12_tabpfn"]["auroc"]
+        facts[f"extended ensemble AUROC {_lbl}"] = f"{_v['estimate']:.3f} (95% CI {_v['ci_95'][0]:.3f} to {_v['ci_95'][1]:.3f})"
+        _d = _EX["comparisons"]["ensemble11_minus_ensemble12_auroc"]   # reported as extended minus pre-registered
+        facts[f"extended minus ensemble {_lbl}"] = f"{-_d['diff']:.3f} (95% CI {-_d['ci_95'][1]:.3f} to {-_d['ci_95'][0]:.3f})"
+        facts[f"tabpfn stack weight {_lbl}"] = f"{_EX['stack_weights_12']['tabpfn']:.2f}"
 
 fails = [(k, v) for k, v in facts.items() if v not in TEXT]
 print(f"{'FACT':46s} VALUE      IN TEXT")

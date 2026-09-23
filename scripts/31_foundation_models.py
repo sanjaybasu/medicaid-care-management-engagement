@@ -1,4 +1,4 @@
-"""Tabular foundation models as post hoc comparators (not in the pre-registered library).
+"""Tabular foundation models as comparators outside the pre-registered library.
 
 TabPFN (Hollmann et al., Nature 2025) and TabFM (Google Research, 2026) are pretrained on synthetic
 tables and predict by in-context learning, so they need no hyperparameter search. Each is shown the

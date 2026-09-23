@@ -46,7 +46,8 @@ That repository is **a different study on overlapping source data, not an earlie
 | `scripts/28_coverage_sensitivity.py` | Utilization and cost with continuous coverage required through day 270 (Appendix Table 13) |
 | `scripts/29_equalized_odds.py` | Equalized odds ratios by race and ethnicity, state, sex, and age band with patient-clustered bootstrap CIs (Appendix Table 3) |
 | `scripts/30_youden_confusion.py` | Confusion matrices at the Youden-optimal threshold with the risk score at matched flag volume (Table 4) |
-| `scripts/31_foundation_models.py` | TabPFN and TabFM as post hoc comparators on the same development/validation split, with paired bootstrap differences (Appendix Table 14) |
+| `scripts/31_foundation_models.py` | TabPFN and TabFM as comparators outside the pre-registered library on the same development/validation split, with paired bootstrap differences (Appendix Table 14) |
+| `scripts/32_extended_ensemble.py` | Sensitivity analysis: twelve-learner ensemble adding TabPFN with out-of-fold stacking (Appendix Table 14) |
 | `audit_consistency.py` | Verifies the manuscript against the canonical file |
 
 Run order: 00, 00b, 00c, 01, 02, 03, 04, 05 (B then A), 06 (B then A), 08, 09, 11, 12, 13, 15, 16, 17, 14, audit.
