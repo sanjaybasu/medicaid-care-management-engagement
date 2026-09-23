@@ -143,6 +143,15 @@ for _a, _lbl in [("race", "race"), ("state", "state"), ("gender", "sex"), ("age_
     facts[f"TPR ratio {_lbl}"] = f"{_v['tpr_ratio']['estimate']:.2f}"
 facts["FPR age under 35"] = f"{EO['groups']['age_band']['under 35']['fpr']:.3f}"
 facts["FPR age 65 and older"] = f"{EO['groups']['age_band']['65 and older']['fpr']:.3f}"
+# bootstrap intervals for table cells (scripts/33_table_intervals.py)
+_TI = json.load(open(P/"results"/"table_intervals_v4.json"))
+_ye = _TI["table4_youden"]["ensemble_stacked_calibrated"]
+for _m in ("sensitivity", "specificity", "ppv"):
+    facts[f"youden {_m} CI"] = f"{_ye[_m]['estimate']:.3f} (95% CI {_ye[_m]['ci_95'][0]:.3f} to {_ye[_m]['ci_95'][1]:.3f})"
+_r30 = _TI["table7"]["top 30% of contacts"]
+facts["top30 sensitivity CI"] = f"{_r30['sensitivity']['estimate']:.3f} (95% CI {_r30['sensitivity']['ci_95'][0]:.3f} to {_r30['sensitivity']['ci_95'][1]:.3f})"
+for _k, _lab in [("spearman_rho", "spearman"), ("jaccard_top_decile", "jaccard decile"), ("risk_score_for_acute_care", "risk score AUROC acute"), ("risk_score_for_disengagement", "risk score AUROC disengagement")]:
+    _v = _TI["table5"][_k]; facts[f"{_lab} CI"] = f"{_v['ci_95'][0]:.3f} to {_v['ci_95'][1]:.3f}"
 # tabular foundation model comparators (post hoc; scripts/31_foundation_models.py)
 for _t, _lbl in [("B", "contacts"), ("A", "enrollment")]:
     _f = P/"results"/f"foundation_models_{_t}_v4.json"

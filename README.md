@@ -48,6 +48,7 @@ That repository is **a different study on overlapping source data, not an earlie
 | `scripts/30_youden_confusion.py` | Confusion matrices at the Youden-optimal threshold with the risk score at matched flag volume (Table 4) |
 | `scripts/31_foundation_models.py` | TabPFN and TabFM as comparators outside the pre-registered library on the same development/validation split, with paired bootstrap differences (Appendix Table 14) |
 | `scripts/32_extended_ensemble.py` | Sensitivity analysis: twelve-learner ensemble adding TabPFN with out-of-fold stacking (Appendix Table 14) |
+| `scripts/33_table_intervals.py` | Patient-clustered bootstrap intervals for Table 4 (Youden rows), Table 5, and Table 7 cells |
 | `audit_consistency.py` | Verifies the manuscript against the canonical file |
 
 Run order: 00, 00b, 00c, 01, 02, 03, 04, 05 (B then A), 06 (B then A), 08, 09, 11, 12, 13, 15, 16, 17, 14, audit.

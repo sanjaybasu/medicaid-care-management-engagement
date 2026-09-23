@@ -36,5 +36,6 @@ $PY scripts/31_foundation_models.py A 8   # post hoc comparators; TabPFN needs T
 $PY scripts/31_foundation_models.py B 8
 $PY scripts/32_extended_ensemble.py A 8   # sensitivity: TabPFN added to the stack
 $PY scripts/32_extended_ensemble.py B 8
+$PY scripts/33_table_intervals.py
 $PY scripts/14_report.py
 $PY audit_consistency.py SageOpenMed
